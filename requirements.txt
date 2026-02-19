@@ -3,3 +3,5 @@ torch>=2.1.0
 sentencepiece>=0.1.99
 fastapi[standard]>=0.109.0
 uvicorn[standard]>=0.24.0
+pytest>=7.0.0
+httpx>=0.25.0
