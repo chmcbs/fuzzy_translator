@@ -5,6 +5,9 @@ from fastapi.responses import JSONResponse
 from transformers import pipeline
 from contextlib import asynccontextmanager
 from pydantic import BaseModel, Field, field_validator
+from prometheus_fastapi_instrumentator import Instrumentator, metrics
+from prometheus_client import Gauge
+import psutil
 
 SUPPORTED_LANGUAGES = {
     "english": "eng_Latn",
@@ -14,6 +17,9 @@ SUPPORTED_LANGUAGES = {
     "spanish": "spa_Latn",
     "greek": "ell_Grek",
 }
+
+CPU_USAGE = Gauge("system_cpu_usage_percent", "Current CPU usage percentage")
+MEMORY_USAGE = Gauge("system_memory_usage_percent", "Current memory usage percentage")
 
 class TranslateRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=100)
@@ -40,6 +46,12 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
+
+def update_system_metrics(info):
+    CPU_USAGE.set(psutil.cpu_percent())
+    MEMORY_USAGE.set(psutil.virtual_memory().percent)
+
+Instrumentator().instrument(app).add(metrics.default()).add(update_system_metrics).expose(app)
 
 def translate_text(text: str, source: str, target: str):
     translation = app.state.translator(text, src_lang=source, tgt_lang=target, max_new_tokens=200)

@@ -35,3 +35,11 @@ def test_translate_too_long():
 def test_translate_empty_string():
     response = client.post("/translate", json={"text": "", "source": "english", "target": "korean"})
     assert response.status_code == 422
+
+def test_metrics():
+    client.get("/health")
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    assert "http_request_duration_seconds" in response.text
+    assert "system_cpu_usage_percent" in response.text
+    assert "system_memory_usage_percent" in response.text

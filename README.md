@@ -15,8 +15,7 @@ A simple multi-language translation API using the [Facebook NLLB](https://huggin
 
 **Prerequisites:** Python 3.11+
 
-
-**NOTE:** on the first run, the model will need to be downloaded. This will take around 1 minute.
+**NOTE:** the model will need to be downloaded on the first run. This usually takes a few minutes.
 
 #### With Docker (recommended)
 
@@ -33,7 +32,7 @@ A simple multi-language translation API using the [Facebook NLLB](https://huggin
 
 - `app.py`          - FastAPI application and translation endpoint
 - `tests.py`        - unit tests
-- `requirements.txt` - pinned dependencies
+- `requirements.txt` - dependencies
 - `Dockerfile`      - container setup
 - `notebook.ipynb`  - initial model test
 
@@ -48,6 +47,10 @@ Returns the health of the server.
 #### `GET /languages`
 
 Lists the languages available for translation.
+
+#### `GET /metrics`
+
+Returns Prometheus-formatted metrics.
 
 #### `POST /translate`
 
@@ -91,7 +94,7 @@ Translates text from source to target language.
 
 **Concurrency:** in its current state, FastAPI runs on uvicorn with a single worker. To handle multiple requests simultaneously, multiple container replicas can be run behind a load balancer, each holding its own copy of the model in memory.
 
-**Monitoring:** key metrics to consider for a production deployment include error rates, latency (time for each `/translate` call to execute) and system resources such as CPU and memory.
+**Monitoring:** the `/metrics` endpoint currently exposes request latency, error rates, and system resource usage. These metrics could be scraped on an interval and fed into a dashboard to track change over time.
 
 **Scaling:** as each container replica needs its own copy of the model, memory is a key constraint when scaling. To handle this, model weights could be cached in a shared location to eliminate the need to re-download for each container.
 
