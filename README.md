@@ -65,9 +65,9 @@ Translates text from source to target language.
 
 **Example usage:**
 
-🗣️ `curl -X POST "http://127.0.0.1:8000/translate" -H "Content-Type: application/json" -d '{"text": "Hello!", "source": "english", "target": "korean"}'`
+🗣️ `curl http://127.0.0.1:8000/translate -H "Content-Type: application/json" -d '{"text": "Hello!", "source": "english", "target": "korean"}'`
 
-↩️ `"안녕하세요!"`
+↩️ `{"translation": "안녕하세요!"}`
 
 | Status Code | Description                                       |
 |-------------|---------------------------------------------------|

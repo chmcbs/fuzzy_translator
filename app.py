@@ -61,7 +61,7 @@ def translate_text(text: str, source: str, target: str):
 def translate(request: TranslateRequest):
     if not hasattr(app.state, "translator"):
         raise HTTPException(status_code=503, detail="Translator not loaded")
-    return translate_text(request.text, SUPPORTED_LANGUAGES[request.source], SUPPORTED_LANGUAGES[request.target])
+    return {"translation": translate_text(request.text, SUPPORTED_LANGUAGES[request.source], SUPPORTED_LANGUAGES[request.target])}
 
 @app.get("/languages")
 def languages():

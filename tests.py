@@ -11,7 +11,7 @@ client = TestClient(app)
 def test_translate_success():
     response = client.post("/translate", json={"text": "Hello!", "source": "english", "target": "korean"})
     assert response.status_code == 200
-    assert response.json() == "안녕하세요!"
+    assert response.json() == {"translation": "안녕하세요!"}
 
 def test_health():
     response = client.get("/health")
