@@ -1,9 +1,31 @@
-"""FastAPI app for translating English to Korean"""
+"""Multi-language FastAPI translation API using Facebook NLLB"""
 
-from fastapi import FastAPI, Body, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from transformers import pipeline
 from contextlib import asynccontextmanager
+from pydantic import BaseModel, Field, field_validator
+
+SUPPORTED_LANGUAGES = {
+    "english": "eng_Latn",
+    "korean": "kor_Hang",
+    "chinese_simplified": "zho_Hans",
+    "chinese_traditional": "zho_Hant",
+    "spanish": "spa_Latn",
+    "greek": "ell_Grek",
+}
+
+class TranslateRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=100)
+    source: str
+    target: str
+
+    @field_validator("source", "target")
+    @classmethod
+    def validate_language(cls, v: str):
+        if v.lower() not in SUPPORTED_LANGUAGES:
+            raise ValueError(f"Unsupported language: {v}. Supported: {list(SUPPORTED_LANGUAGES.keys())}")
+        return v.lower()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -19,24 +41,24 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-# Define the translation function
-def translate_eng_kor(text: str):
-    translation = app.state.translator(text, src_lang="eng_Latn", tgt_lang="kor_Hang", max_new_tokens=200)
+def translate_text(text: str, source: str, target: str):
+    translation = app.state.translator(text, src_lang=source, tgt_lang=target, max_new_tokens=200)
     return translation[0]["translation_text"]
 
 @app.post("/translate")
-def translate(text: str = Body(..., min_length=1, max_length=100)):
-    """Translate text from English to Korean"""
+def translate(request: TranslateRequest):
     if not hasattr(app.state, "translator"):
         raise HTTPException(status_code=503, detail="Translator not loaded")
-    return translate_eng_kor(text)
+    return translate_text(request.text, SUPPORTED_LANGUAGES[request.source], SUPPORTED_LANGUAGES[request.target])
+
+@app.get("/languages")
+def languages():
+    return list(SUPPORTED_LANGUAGES.keys())
 
 @app.get("/health")
 def health():
-    """Check the health of the server"""
     return {"status": "healthy"}
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    """Handle unexpected exceptions"""
     return JSONResponse(status_code=500, content={"error": "Internal server error"})
